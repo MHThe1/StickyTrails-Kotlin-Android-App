@@ -1,10 +1,8 @@
 package com.work.stickytrails.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.work.stickytrails.models.NoteModel
-import com.work.stickytrails.network.RetrofitInstance
 import com.work.stickytrails.network.RetrofitInstance.noteApi
 import com.work.stickytrails.utils.TokenManager
 import kotlinx.coroutines.launch

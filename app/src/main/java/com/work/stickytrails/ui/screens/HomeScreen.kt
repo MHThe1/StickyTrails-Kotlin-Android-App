@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,7 +15,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.work.stickytrails.models.NoteModel
 import com.work.stickytrails.viewmodels.HomeViewModel
 import java.text.SimpleDateFormat
@@ -71,7 +78,6 @@ fun HomeScreen(
 
         when {
             isLoading -> {
-                // Show a loading indicator
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -80,7 +86,6 @@ fun HomeScreen(
                 }
             }
             errorMessage != null -> {
-                // Show an error message with a retry button
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -95,7 +100,6 @@ fun HomeScreen(
                 }
             }
             notes.isEmpty() -> {
-                // Show empty state if there are no notes
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -104,7 +108,6 @@ fun HomeScreen(
                 }
             }
             else -> {
-                // Show notes if they exist
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -124,6 +127,7 @@ fun HomeScreen(
     }
 }
 
+
 // Validation function to check if the note has valid data
 fun isValidNote(note: NoteModel): Boolean {
     return !note.title.isNullOrEmpty() &&
@@ -135,7 +139,6 @@ fun isValidNote(note: NoteModel): Boolean {
 
 @Composable
 fun NoteCard(note: NoteModel) {
-    // Retrieve the color based on the note's color, with a default fallback to yellow
     val noteColor = colorConfig[note.color] ?: colorConfig["yellow"]!!
 
     Card(
@@ -150,12 +153,20 @@ fun NoteCard(note: NoteModel) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Title
-            Text(
-                text = note.title,
-                style = MaterialTheme.typography.headlineSmall,
-                color = Color.White
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = getColorIcon(note.color),
+                    contentDescription = "Note Color Icon",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = note.title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White
+                )
+            }
 
             // Content
             Text(
@@ -165,16 +176,23 @@ fun NoteCard(note: NoteModel) {
                 color = Color.White
             )
 
-            // Priority
-            Text(
-                text = "Priority: ${note.priority}",
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White
-            )
-
             // Time Display
             TimeDisplay(createdAt = note.createdAt)
         }
+    }
+}
+
+// Function to get icon based on the note's color
+fun getColorIcon(color: String): ImageVector {
+    return when (color) {
+        "yellow" -> Icons.Filled.Star
+        "green" -> Icons.Filled.Check
+        "blue" -> Icons.Filled.Cloud
+        "pink" -> Icons.Filled.Favorite
+        "purple" -> Icons.Filled.Palette
+        "indigo" -> Icons.Filled.StarBorder
+        "red" -> Icons.Filled.Warning
+        else -> Icons.Filled.Help
     }
 }
 
