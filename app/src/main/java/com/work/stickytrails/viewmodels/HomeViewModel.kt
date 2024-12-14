@@ -16,22 +16,38 @@ class HomeViewModel(private val tokenManager: TokenManager) : ViewModel() {
     private val _notes = MutableStateFlow<List<NoteModel>>(emptyList())
     val notes: StateFlow<List<NoteModel>> = _notes
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
+
+    init {
+        fetchNotes()
+    }
+
     fun fetchNotes() {
+        _isLoading.value = true
+        _errorMessage.value = null // Clear any previous error message
         viewModelScope.launch {
-            val token = tokenManager.getToken()
-            val response = noteApi.getNotes("Bearer $token")
-            if (response.isSuccessful) {
-                val apiResponse = response.body()
-                if (apiResponse != null && apiResponse.success) {
-                    // Assign the notes list to the StateFlow
-                    _notes.value = apiResponse.data.sortedBy { it.priority }
+            try {
+                val token = tokenManager.getToken()
+                val response = noteApi.getNotes("Bearer $token")
+                if (response.isSuccessful) {
+                    val apiResponse = response.body()
+                    if (apiResponse != null && apiResponse.success) {
+                        _notes.value = apiResponse.data.sortedBy { it.priority }
+                    } else {
+                        _errorMessage.value = "Failed to load notes. Try again later."
+                    }
                 } else {
-                    // Handle API response failure
-                    Log.e("FetchNotes", "Error: ${response.errorBody()?.string()}")
+                    _errorMessage.value = "Error: ${response.code()}"
                 }
-            } else {
-                // Handle HTTP error
-                Log.e("FetchNotes", "HTTP Error: ${response.code()}")
+            } catch (e: Exception) {
+                // Handle network errors or any other exceptions
+                _errorMessage.value = "Network error. Please check your connection."
+            } finally {
+                _isLoading.value = false
             }
         }
     }
