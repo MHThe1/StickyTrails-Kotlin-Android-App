@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -18,6 +19,7 @@ import com.work.stickytrails.ui.screens.LoginScreen
 import com.work.stickytrails.ui.screens.HomeScreen
 import com.work.stickytrails.ui.theme.StickyTrailsTheme
 import com.work.stickytrails.utils.TokenManager
+import com.work.stickytrails.viewmodels.HomeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,17 +34,13 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainApp() {
-    // Navigation controller to manage app navigation
     val navController = rememberNavController()
     val tokenManager = TokenManager(navController.context)
-    val savedToken = tokenManager.getToken() // Retrieve saved token
+    val savedToken = tokenManager.getToken()
 
     // logging
     Log.d("TokenManager", "Saved Token: $savedToken")
 
-
-
-    // Decide the start destination based on token presence
     val startDestination = if (savedToken.isNullOrEmpty()) "login" else "home"
 
     Scaffold(
@@ -51,13 +49,19 @@ fun MainApp() {
         AppNavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier.padding(innerPadding),
+            tokenManager = tokenManager // Pass the TokenManager to AppNavHost
         )
     }
 }
 
 @Composable
-fun AppNavHost(navController: NavHostController, startDestination: String, modifier: Modifier = Modifier) {
+fun AppNavHost(
+    navController: NavHostController,
+    startDestination: String,
+    modifier: Modifier = Modifier,
+    tokenManager: TokenManager
+) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -67,7 +71,6 @@ fun AppNavHost(navController: NavHostController, startDestination: String, modif
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { token ->
-                    // Save token and navigate to HomeScreen
                     TokenManager(navController.context).saveToken(token)
                     navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
@@ -78,17 +81,19 @@ fun AppNavHost(navController: NavHostController, startDestination: String, modif
 
         // Home Screen
         composable("home") {
-            HomeScreen(onLogout = {
-                // Clear token on logout
-                TokenManager(navController.context).clearToken()
-                navController.navigate("login") {
-                    popUpTo("home") { inclusive = true }
+            val viewModel = HomeViewModel(tokenManager) // Pass TokenManager to HomeViewModel
+            HomeScreen(
+                viewModel = viewModel,
+                onLogout = {
+                    TokenManager(navController.context).clearToken()
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
+                    }
                 }
-            })
+            )
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

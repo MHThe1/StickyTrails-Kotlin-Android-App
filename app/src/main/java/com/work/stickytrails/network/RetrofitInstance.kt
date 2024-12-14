@@ -13,4 +13,12 @@ object RetrofitInstance {
             .build()
             .create(UserService::class.java)
     }
+
+    val noteApi: NoteService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(NoteService::class.java)
+    }
 }
